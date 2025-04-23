@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>Starter Template - Materialize</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="./static/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="./static/css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alike+Angular&family=Anton&family=Outfit:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+      <br><br>
+      <h1 class="header center orange-text">
+        <img src="{{ url_for('static', filename='logoforpage.png') }}" 
+             alt="Forest Fire Prediction System"
+             class="main-logo">
+      </h1>
+      <div class="row center">
+        <h5 class="header col s12 light">Wildfires Detected, Lives Protected
+        <br>
+        </h5>
+      </div>
+
+              <div class="row">
+    <form action='/predict' method="post" class="col s12">
+      <div class="row">
+        <div class="input-field col s4">
+            <label for="first_name"><b>Temperature</b></label>
+            <br>
+          <input placeholder="Temperature in Celsius" name="Temperature" id="first_name" type="text" class="validate">
+        </div>
+        <div class="input-field col s4">
+
+          <label for="last_name"><b>Oxygen </b></label>
+            <br>
+          <input id="last_name" name="Oxygen" placeholder="Oxygen content in ppm"  type="text" class="validate">
+
+        </div>
+
+        <div class="input-field col s4">
+            <label for="_name"><b>Humidity</b></label>
+            <br>
+          <input id="_name" name="Humidity" placeholder="Humidity %" type="text" class="validate">
+
+        </div>
+
+      </div>
+
+      <div class="row center">
+
+          <button type="submit" class="btn-large waves-effect waves-light orange">Predict Probability</button>
+      </div>
+    </form>
+      </div>
+
+      <br>
+        <!-- Replace {{ pred }} with this -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="row center">
+            {% for category, message in messages %}
+              <div class="flash-alert {{ category }}-alert">
+                {{ message|safe }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    
+      <br>
+
+
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="./static/js/materialize.js"></script>
+  <script src="js/init.js"></script>
+  <!-- Add this right before </body> -->
+    <p>© Made by Team 4 of CSE Cyber Security Dept.</p>
+
+
+  </body>
+</html>
+
