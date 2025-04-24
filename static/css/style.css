@@ -6,7 +6,7 @@
  * Made By MaterializeCSS.com
  */
 *{
-  font-family: "Anton", serif;
+  font-family: "Hanalei Fill", serif;
   font-weight: 400;
   font-style: normal;
 }
@@ -238,15 +238,9 @@ body::before {
 }
 
 /* Optional: Add extra opacity control */
+/* Remove white overlay from main container */
 .container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255,255,255,0.5); /* Adjust this value for final opacity */
-  z-index: 0;
+  background: transparent !important;
 }
 /* Update your current container styles */
 .container {
@@ -386,4 +380,38 @@ h5{
     flex-direction: column;
     align-items: flex-start;
   }
+}
+.footer-copyright .container.center {
+  color: black !important;
+}
+/* Fix footer text visibility */
+.page-footer .footer-copyright {
+  position: relative;
+  z-index: 2; /* Ensure it's above any background elements */
+}
+
+.page-footer .container::before {
+  display: none; /* Disable white overlay specifically in footer */
+}
+
+.page-footer .container {
+  background: transparent !important; /* Remove any residual background */
+}
+
+/* Enhance text contrast */
+.footer-copyright .container.center {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Adjust footer background */
+.page-footer.orange {
+  background-color: rgba(255, 152, 0, 0.9) !important; /* More opaque orange */
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 152, 0, 0.9),
+    rgba(255, 87, 34, 0.9)
+  );
+  border-top: 2px solid #ff6d00;
 }

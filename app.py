@@ -1,57 +1,106 @@
 from flask import Flask, request, redirect, url_for, render_template, flash
 import pickle
-import numpy as np
+import os
+import requests
 
 app = Flask(__name__)
+app.secret_key = os.urandom(16).hex()
 
+# Load trained model pipeline
+with open('model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
-model = pickle.load(open('model.pkl', 'rb'))
+API_KEY = "930c05cd5069d54bc6c6e69e945f83d6"
+WEATHERSTACK_URL = "http://api.weatherstack.com/current"
+
+def get_weather_data(place):
+    """Fetch weather data from Weatherstack for a given location"""
+    params = {
+        'access_key': API_KEY,
+        'query': place
+    }
+
+    try:
+        response = requests.get(WEATHERSTACK_URL, params=params, timeout=10)
+
+        # Handle unauthorized access
+        if response.status_code == 401:
+            return None, "⚠ API key is unauthorized. Please contact the developer."
+
+        response.raise_for_status()
+        data = response.json()
+
+        if "error" in data:
+            return None, f"❌ {data['error'].get('info', 'Location not found or API error.')}"
+
+        current = data.get("current", {})
+        return {
+            'temp': current.get('temperature', 25.0),
+            'humidity': current.get('humidity', 50),
+            'wind_speed': current.get('wind_speed', 2.0),
+            'precipitation': current.get('precip', 0.0)
+        }, None
+
+    except requests.exceptions.RequestException:
+        return None, "⚠ Network error: Please check your internet connection."
+    except Exception as e:
+        return None, f"⚠ Unexpected error: {str(e)}"
 
 @app.route('/')
-def hello_world():
+def home():
     return render_template("forest_fire.html")
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        # Get and validate form inputs
-        temperature = int(request.form['Temperature'])
-        oxygen = int(request.form['Oxygen'])
-        humidity = int(request.form['Humidity'])
-        
-        # Prepare features for prediction
-        final_features = [[temperature, oxygen, humidity]]
-        
-        # Make prediction
-        prediction = model.predict_proba(final_features)
-        probability = prediction[0][1] * 100  # Convert to percentage
-        output = f'{probability:.2f}%'
+    place = request.form.get('Place', '').strip()
 
-        # Prepare alert message
-        if probability > 50:
+    if not place:
+        flash('⚠ Please enter a valid location name.', 'error')
+        return redirect(url_for('home'))
+
+    weather_data, error = get_weather_data(place)
+    if error:
+        flash(error, 'error')
+        return redirect(url_for('home'))
+
+    try:
+        features = [[
+            weather_data['temp'],
+            weather_data['humidity'],
+            weather_data['wind_speed'],
+            weather_data['precipitation']
+        ]]
+
+        # Predict fire probability
+        proba = model.predict_proba(features)[0][1] * 100
+        output = f'{proba:.1f}%'
+
+        # Alert levels
+        if proba > 75:
             alert_type = 'danger'
-            message = f'⚠️ Your Forest is in Danger!<br>Fire Probability: {output}'
-            advice = 'Immediate action required!'
+            message = f'🔥 High Fire Risk! ({output})'
+            advice = 'Evacuation recommended - contact authorities immediately'
+        elif proba > 50:
+            alert_type = 'warning'
+            message = f'⚠ Moderate Fire Risk ({output})'
+            advice = 'Heightened alert - monitor conditions closely'
         else:
             alert_type = 'success'
-            message = f'✅ Your Forest is Safe<br>Fire Probability: {output}'
-            advice = 'Normal conditions maintained'
+            message = f'✅ Low Fire Risk ({output})'
+            advice = 'Normal precautions advised'
 
-        # Flash messages for single request
+        # Show messages
         flash(message, alert_type)
         flash(advice, 'advice')
-        
-        return redirect(url_for('hello_world'))
+        flash(f'Current Weather: {weather_data["temp"]}°C, '
+              f'{weather_data["humidity"]}% Humidity, '
+              f'{weather_data["wind_speed"]} km/h Wind, '
+              f'{weather_data["precipitation"]} mm Rain', 'conditions')
 
-    except KeyError:
-        flash('⚠️ Error: Missing form fields!', 'error')
-        return redirect(url_for('hello_world'))
-    except ValueError:
-        flash('⚠️ Error: Invalid input values!', 'error')
-        return redirect(url_for('hello_world'))
     except Exception as e:
-        flash(f'⚠️ Unexpected error: {str(e)}', 'error')
-        return redirect(url_for('hello_world'))
+        flash(f'⚠ Prediction Error: {str(e)}', 'error')
+
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
